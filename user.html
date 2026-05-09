@@ -193,7 +193,7 @@
                 <div class="upload-area" id="uploadArea">
                     <i class="bi bi-image" style="font-size: 48px; color: #667eea;"></i>
                     <h5 class="mt-3">点击或拖拽图片到此处上传</h5>
-                    <p class="text-muted">支持 JPG、PNG、GIF 格式，最大 16MB</p>
+                    <p class="text-muted">支持 JPG、PNG、GIF、WEBP，最大 16MB</p>
                     <input type="file" id="imageInput" accept="image/*" style="display: none;">
                 </div>
                 <div id="imagePreview" style="display: none;">
@@ -250,7 +250,7 @@
     <!-- Markdown渲染库 -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script>
-        const API_BASE = 'http://localhost:5000/api';
+        const API_BASE = `${window.location.protocol === 'file:' ? 'http://127.0.0.1:5001' : window.location.origin}/api`;
         let selectedFile = null;
 
         // 检查登录状态
@@ -271,7 +271,13 @@
 
         // 文件选择事件
         document.getElementById('imageInput').addEventListener('change', (e) => {
-            handleFileSelect(e.target.files[0]);
+            const f = e.target.files[0];
+            if (f && !isAcceptedImageFile(f)) {
+                alert('请选择 PNG、JPG、JPEG、GIF 或 WEBP 图片');
+                e.target.value = '';
+                return;
+            }
+            handleFileSelect(f);
         });
 
         // 拖拽上传
@@ -289,10 +295,18 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
+            if (file && isAcceptedImageFile(file)) {
                 handleFileSelect(file);
+            } else if (file) {
+                alert('请选择 PNG、JPG、JPEG、GIF 或 WEBP 图片（个别系统拖拽时类型识别不全，可改用点击选择文件）');
             }
         });
+
+        function isAcceptedImageFile(file) {
+            if (!file) return false;
+            if (file.type.startsWith('image/')) return true;
+            return /\.(png|jpe?g|gif|webp)$/i.test(file.name);
+        }
 
         function handleFileSelect(file) {
             if (!file) return;
