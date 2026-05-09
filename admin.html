@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疾病诊断系统 - 管理员中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .main-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+            font-weight: 600;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead {
+            background: #f8f9fa;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.875rem;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .badge-admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .badge-user {
+            background: #6c757d;
+        }
+        .case-image-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .case-image-thumb:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s;
+        }
+        .markdown-content {
+            line-height: 1.6;
+        }
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        .markdown-content p {
+            margin-bottom: 8px;
+        }
+        .markdown-content ul, .markdown-content ol {
+            margin-left: 20px;
+            margin-bottom: 8px;
+        }
+        .markdown-content li {
+            margin-bottom: 4px;
+        }
+        .markdown-content strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .markdown-content code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .markdown-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-shield-check"></i> 管理员中心
+            </span>
+            <div class="d-flex">
+                <span class="navbar-text text-white me-3" id="userInfo"></span>
+                <button class="btn btn-outline-light btn-sm me-2" onclick="window.location.href='user.html'">
+                    <i class="bi bi-person"></i> 用户界面
+                </button>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> 退出
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- 用户管理 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-people"></i> 用户管理
+                <button class="btn btn-light btn-sm float-end" onclick="refreshUsers()">
+                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>注册时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr>
+                                <td colspan="6" class="text-center">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 病例管理 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clipboard-data"></i> 病例管理
+                <button class="btn btn-light btn-sm float-end" onclick="refreshCases()">
+                    <i class="bi bi-arrow-clockwise"></i> 刷新
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户</th>
+                                <th>图片</th>
+                                <th>病情描述</th>
+                                <th>诊断结果</th>
+                                <th>提交时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="casesTable">
+                            <tr>
+                                <td colspan="7" class="text-center">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑用户</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="editUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="editEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">新密码（留空则不修改）</label>
+                            <input type="password" class="form-control" id="editPassword">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsAdmin">
+                                <label class="form-check-label" for="editIsAdmin">管理员权限</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑病例模态框 -->
+    <div class="modal fade" id="editCaseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑病例</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCaseForm">
+                        <input type="hidden" id="editCaseId">
+                        <div class="mb-3">
+                            <label class="form-label">病情描述</label>
+                            <textarea class="form-control" id="editDescription" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">诊断结果 <small class="text-muted">(支持Markdown格式)</small></label>
+                            <textarea class="form-control" id="editDiagnosis" rows="4" oninput="updateMarkdownPreview('editDiagnosis', 'diagnosisPreview')"></textarea>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="togglePreview('diagnosisPreview')">
+                                    <i class="bi bi-eye"></i> 预览
+                                </button>
+                            </div>
+                            <div id="diagnosisPreview" class="markdown-preview markdown-content" style="display: none;"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">AI分析 <small class="text-muted">(支持Markdown格式)</small></label>
+                            <textarea class="form-control" id="editAiAnalysis" rows="4" oninput="updateMarkdownPreview('editAiAnalysis', 'analysisPreview')"></textarea>
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="togglePreview('analysisPreview')">
+                                    <i class="bi bi-eye"></i> 预览
+                                </button>
+                            </div>
+                            <div id="analysisPreview" class="markdown-preview markdown-content" style="display: none;"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCase()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看图片模态框 -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">病例图片</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" alt="病例图片" style="max-width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Markdown渲染库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        // 检查登录状态和权限
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) {
+            window.location.href = 'index.html';
+        } else if (!user.is_admin) {
+            alert('您没有管理员权限');
+            window.location.href = 'user.html';
+        }
+
+        document.getElementById('userInfo').textContent = `管理员：${user.username}`;
+
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayUsers(data.users);
+                } else {
+                    alert(data.error || '加载用户失败');
+                }
+            } catch (error) {
+                console.error('加载用户失败:', error);
+                document.getElementById('usersTable').innerHTML =
+                    '<tr><td colspan="6" class="text-center text-danger">加载失败，请检查后端服务</td></tr>';
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTable');
+
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">暂无用户</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge ${user.is_admin ? 'badge-admin' : 'badge-user'}">
+                            ${user.is_admin ? '管理员' : '普通用户'}
+                        </span>
+                    </td>
+                    <td>${new Date(user.created_at).toLocaleString('zh-CN')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 加载病例列表
+        async function loadCases() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/cases`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayCases(data.cases);
+                } else {
+                    alert(data.error || '加载病例失败');
+                }
+            } catch (error) {
+                console.error('加载病例失败:', error);
+                document.getElementById('casesTable').innerHTML =
+                    '<tr><td colspan="7" class="text-center text-danger">加载失败，请检查后端服务</td></tr>';
+            }
+        }
+
+        function displayCases(cases) {
+            const tbody = document.getElementById('casesTable');
+
+            if (cases.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">暂无病例</td></tr>';
+                return;
+            }
+
+            // Markdown渲染函数
+            const renderMarkdown = (text) => {
+                if (!text) return '';
+                try {
+                    marked.setOptions({
+                        breaks: true,
+                        gfm: true
+                    });
+                    return marked.parse(text);
+                } catch (e) {
+                    // 如果Markdown解析失败，返回纯文本（转义HTML）
+                    return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                }
+            };
+
+            // 简化Markdown内容用于表格显示（只显示前100个字符）
+            const simplifyMarkdown = (text) => {
+                if (!text) return '';
+                // 移除Markdown标记，只保留纯文本
+                const plainText = text
+                    .replace(/#{1,6}\s+/g, '') // 移除标题标记
+                    .replace(/\*\*/g, '') // 移除加粗标记
+                    .replace(/\*/g, '') // 移除斜体标记
+                    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // 移除链接标记
+                    .replace(/`([^`]+)`/g, '$1') // 移除代码标记
+                    .trim();
+                return plainText.length > 100 ? plainText.substring(0, 100) + '...' : plainText;
+            };
+
+            tbody.innerHTML = cases.map(caseItem => {
+                const diagnosisPreview = simplifyMarkdown(caseItem.diagnosis_result || '');
+                const diagnosisHtml = renderMarkdown(caseItem.diagnosis_result || '');
+
+                return `
+                <tr>
+                    <td>${caseItem.id}</td>
+                    <td>${caseItem.username || '未知'}</td>
+                    <td>
+                        ${caseItem.image_path ? `
+                            <img src="${API_BASE}/uploads/${caseItem.image_path}"
+                                 class="case-image-thumb"
+                                 onclick="showImage('${API_BASE}/uploads/${caseItem.image_path}')"
+                                 alt="病例图片">
+                        ` : '<span class="text-muted">无图片</span>'}
+                    </td>
+                    <td>
+                        <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${caseItem.description}">
+                            ${caseItem.description}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;"
+                             title="${caseItem.diagnosis_result || '未诊断'}"
+                             data-full-content="${caseItem.diagnosis_result || ''}"
+                             onclick="showFullDiagnosis(this)">
+                            ${diagnosisPreview || '<span class="text-muted">未诊断</span>'}
+                        </div>
+                    </td>
+                    <td>${new Date(caseItem.created_at).toLocaleString('zh-CN')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editCase(${caseItem.id})">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCase(${caseItem.id})">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        // 显示完整诊断结果
+        function showFullDiagnosis(element) {
+            const fullContent = element.getAttribute('data-full-content');
+            if (!fullContent) return;
+
+            // 创建模态框显示完整内容
+            const modalHtml = `
+                <div class="modal fade" id="diagnosisModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">完整诊断结果</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body markdown-content">
+                                ${renderMarkdown(fullContent)}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 移除旧的模态框（如果存在）
+            const oldModal = document.getElementById('diagnosisModal');
+            if (oldModal) oldModal.remove();
+
+            // 添加新模态框
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // 使用全局renderMarkdown函数渲染内容
+            const modalBody = document.querySelector('#diagnosisModal .modal-body');
+            modalBody.innerHTML = renderMarkdown(fullContent);
+
+            // 显示模态框
+            new bootstrap.Modal(document.getElementById('diagnosisModal')).show();
+        }
+
+        // 编辑用户
+        async function editUser(userId) {
+            try {
+                const response = await fetch(`${API_BASE}/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                const user = data.users.find(u => u.id === userId);
+
+                if (user) {
+                    document.getElementById('editUserId').value = user.id;
+                    document.getElementById('editUsername').value = user.username;
+                    document.getElementById('editEmail').value = user.email;
+                    document.getElementById('editIsAdmin').checked = user.is_admin;
+                    document.getElementById('editPassword').value = '';
+
+                    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+                }
+            } catch (error) {
+                alert('加载用户信息失败');
+            }
+        }
+
+        // 保存用户
+        async function saveUser() {
+            const userId = document.getElementById('editUserId').value;
+            const username = document.getElementById('editUsername').value;
+            const email = document.getElementById('editEmail').value;
+            const password = document.getElementById('editPassword').value;
+            const isAdmin = document.getElementById('editIsAdmin').checked;
+
+            const data = { username, email, is_admin: isAdmin };
+            if (password) {
+                data.password = password;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+                    loadUsers();
+                    alert('更新成功');
+                } else {
+                    alert(result.error || '更新失败');
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 删除用户
+        async function deleteUser(userId, username) {
+            if (!confirm(`确定要删除用户 "${username}" 吗？此操作将同时删除该用户的所有病例记录，且无法恢复！`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    loadUsers();
+                    alert('删除成功');
+                } else {
+                    alert(result.error || '删除失败');
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 编辑病例
+        async function editCase(caseId) {
+            try {
+                const response = await fetch(`${API_BASE}/admin/cases`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                const caseItem = data.cases.find(c => c.id === caseId);
+
+                if (caseItem) {
+                    document.getElementById('editCaseId').value = caseItem.id;
+                    document.getElementById('editDescription').value = caseItem.description;
+                    document.getElementById('editDiagnosis').value = caseItem.diagnosis_result || '';
+                    document.getElementById('editAiAnalysis').value = caseItem.ai_analysis || '';
+
+                    // 初始化预览（隐藏）
+                    document.getElementById('diagnosisPreview').style.display = 'none';
+                    document.getElementById('analysisPreview').style.display = 'none';
+
+                    new bootstrap.Modal(document.getElementById('editCaseModal')).show();
+                }
+            } catch (error) {
+                alert('加载病例信息失败');
+            }
+        }
+
+        // 保存病例
+        async function saveCase() {
+            const caseId = document.getElementById('editCaseId').value;
+            const description = document.getElementById('editDescription').value;
+            const diagnosis = document.getElementById('editDiagnosis').value;
+            const aiAnalysis = document.getElementById('editAiAnalysis').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/cases/${caseId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        description,
+                        diagnosis_result: diagnosis,
+                        ai_analysis: aiAnalysis
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('editCaseModal')).hide();
+                    loadCases();
+                    alert('更新成功');
+                } else {
+                    alert(result.error || '更新失败');
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 删除病例
+        async function deleteCase(caseId) {
+            if (!confirm('确定要删除这个病例吗？此操作无法恢复！')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/cases/${caseId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    loadCases();
+                    alert('删除成功');
+                } else {
+                    alert(result.error || '删除失败');
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 显示图片
+        function showImage(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
+        }
+
+        // 刷新
+        function refreshUsers() {
+            loadUsers();
+        }
+
+        function refreshCases() {
+            loadCases();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // 页面加载时获取数据
+        loadUsers();
+        loadCases();
+    </script>
+</body>
+</html>
+

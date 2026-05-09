@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于AI大模型的疾病诊断系统 - 用户中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #7bc0eb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+            font-weight: 600;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+        }
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .case-card {
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+        .case-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .case-image:hover {
+            transform: scale(1.02);
+        }
+        .diagnosis-result {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .diagnosis-result h6 {
+            color: #0ea5e9;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .diagnosis-content {
+            line-height: 1.8;
+            color: #333;
+        }
+        .diagnosis-content h1, .diagnosis-content h2, .diagnosis-content h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #0ea5e9;
+        }
+        .diagnosis-content p {
+            margin-bottom: 10px;
+        }
+        .diagnosis-content ul, .diagnosis-content ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .diagnosis-content li {
+            margin-bottom: 5px;
+        }
+        .diagnosis-content strong {
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+        .diagnosis-content code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+        .image-modal-content {
+            margin: auto;
+            display: block;
+            width: 90%;
+            max-width: 900px;
+            margin-top: 50px;
+            animation: zoom 0.3s;
+        }
+        @keyframes zoom {
+            from {transform: scale(0)}
+            to {transform: scale(1)}
+        }
+        .close-image {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-image:hover {
+            color: #bbb;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner-border {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-heart-pulse"></i> 疾病辅助诊断系统
+            </span>
+            <div class="d-flex">
+                <span class="navbar-text text-white me-3" id="userInfo"></span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> 退出
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- 上传病例卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cloud-upload"></i> 上传病例
+            </div>
+            <div class="card-body">
+                <div class="upload-area" id="uploadArea">
+                    <i class="bi bi-image" style="font-size: 48px; color: #667eea;"></i>
+                    <h5 class="mt-3">点击或拖拽图片到此处上传</h5>
+                    <p class="text-muted">支持 JPG、PNG、GIF 格式，最大 16MB</p>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                </div>
+                <div id="imagePreview" style="display: none;">
+                    <img id="previewImg" class="preview-image" alt="预览">
+                    <button class="btn btn-outline-danger mt-2" onclick="removeImage()">
+                        <i class="bi bi-trash"></i> 移除图片
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <label class="form-label fw-bold">病情描述</label>
+                    <textarea class="form-control" id="description" rows="5"
+                        placeholder="请详细描述您的症状、发病时间、既往史等信息..."></textarea>
+                </div>
+
+                <div class="loading" id="uploadLoading">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">上传中...</span>
+                    </div>
+                    <p class="mt-2">正在上传并分析，请稍候...</p>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary w-100" id="submitBtn" onclick="submitCase()">
+                        <i class="bi bi-send"></i> 提交并分析
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的病例列表 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list-ul"></i> 我的病例记录
+            </div>
+            <div class="card-body">
+                <div id="casesList">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                        <p class="mt-3">暂无病例记录</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <span class="close-image" onclick="closeImageModal()">&times;</span>
+        <img class="image-modal-content" id="modalImage">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Markdown渲染库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let selectedFile = null;
+
+        // 检查登录状态
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        // 显示用户信息
+        document.getElementById('userInfo').textContent = `欢迎，${user.username}`;
+
+        // 上传区域点击事件
+        document.getElementById('uploadArea').addEventListener('click', () => {
+            document.getElementById('imageInput').click();
+        });
+
+        // 文件选择事件
+        document.getElementById('imageInput').addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // 拖拽上传
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFileSelect(file);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('uploadArea').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            selectedFile = null;
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadArea').style.display = 'block';
+            document.getElementById('imageInput').value = '';
+        }
+
+        async function submitCase() {
+    // 1. 获取文字描述的值
+    const description = document.getElementById('description').value.trim();
+
+    // 2. 合并判断逻辑：图片和文字不能同时为空
+    if (!selectedFile && !description) {
+        alert('请上传图片或填写病情描述，至少提供一项');
+        return;
+    }
+
+    // 3. 构建 FormData
+    const formData = new FormData();
+    
+    // 只有当选择了图片时，才添加到 formData 中
+    if (selectedFile) {
+        formData.append('image', selectedFile);
+    }
+    
+    // 只有当填写了描述时，才添加到 formData 中
+    if (description) {
+        formData.append('description', description);
+    }
+
+            document.getElementById('uploadLoading').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('上传成功！AI正在分析中...');
+                    // 清空表单
+                    removeImage();
+                    document.getElementById('description').value = '';
+                    // 刷新病例列表
+                    loadMyCases();
+                } else {
+                    alert(data.error || '上传失败');
+                }
+            } catch (error) {
+                alert('网络错误，请检查后端服务是否启动');
+            } finally {
+                document.getElementById('uploadLoading').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        async function loadMyCases() {
+            try {
+                const response = await fetch(`${API_BASE}/my-cases`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayCases(data.cases);
+                }
+            } catch (error) {
+                console.error('加载病例失败:', error);
+            }
+        }
+
+        function displayCases(cases) {
+            const container = document.getElementById('casesList');
+
+            if (cases.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                        <p class="mt-3">暂无病例记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cases.map(caseItem => {
+                // 渲染Markdown内容
+                const renderMarkdown = (text) => {
+                    if (!text) return '';
+                    try {
+                        // 配置marked选项
+                        marked.setOptions({
+                            breaks: true,
+                            gfm: true
+                        });
+                        return marked.parse(text);
+                    } catch (e) {
+                        // 如果Markdown解析失败，返回纯文本（转义HTML）
+                        return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+                    }
+                };
+
+                const imageUrl = caseItem.image_path ? `${API_BASE}/uploads/${caseItem.image_path}` : '';
+                const diagnosisHtml = caseItem.diagnosis_result ? renderMarkdown(caseItem.diagnosis_result) : '';
+                const analysisHtml = caseItem.ai_analysis ? renderMarkdown(caseItem.ai_analysis) : '';
+
+                return `
+                <div class="card case-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                ${imageUrl ? `
+                                    <div class="text-center mb-3">
+                                        <img src="${imageUrl}"
+                                             class="case-image"
+                                             alt="病例图片"
+                                             onclick="showImageModal('${imageUrl}')"
+                                             title="点击查看大图">
+                                        <p class="text-muted small mt-2">点击图片查看详情</p>
+                                    </div>
+                                ` : '<p class="text-muted text-center">暂无图片</p>'}
+                            </div>
+                            <div class="col-md-8">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-clock"></i> 提交时间：${new Date(caseItem.created_at).toLocaleString('zh-CN')}
+                                </h6>
+                                <div class="mb-3">
+                                    <strong><i class="bi bi-file-text"></i> 病情描述：</strong>
+                                    <p class="mt-1">${caseItem.description}</p>
+                                </div>
+                                ${diagnosisHtml ? `
+                                    <div class="diagnosis-result">
+                                        <h6><i class="bi bi-clipboard-check"></i> 诊断结果：</h6>
+                                        <div class="diagnosis-content">${diagnosisHtml}</div>
+                                    </div>
+                                ` : '<p class="text-muted"><i class="bi bi-hourglass-split"></i> 诊断结果生成中...</p>'}
+                                ${analysisHtml ? `
+                                    <div class="mt-3">
+                                        <small class="text-muted"><i class="bi bi-robot"></i> AI详细分析：</small>
+                                        <div class="diagnosis-content mt-2" style="font-size: 0.9em; color: #666;">${analysisHtml}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function showImageModal(imageUrl) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = imageUrl;
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                closeImageModal();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // 页面加载时获取病例列表
+        loadMyCases();
+    </script>
+</body>
+</html>
+
