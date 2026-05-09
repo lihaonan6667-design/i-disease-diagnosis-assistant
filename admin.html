@@ -291,7 +291,7 @@
     <!-- Markdown渲染库 -->
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     <script>
-        const API_BASE = 'http://localhost:5000/api';
+        const API_BASE = `${window.location.protocol === 'file:' ? 'http://127.0.0.1:5001' : window.location.origin}/api`;
 
         // 检查登录状态和权限
         const token = localStorage.getItem('token');

@@ -21,6 +21,8 @@ def encode_image(image_path):
                 mime = 'image/jpeg'
             elif ext == '.gif':
                 mime = 'image/gif'
+            elif ext == '.webp':
+                mime = 'image/webp'
             else:
                 mime = 'image/jpeg' # 默认
             

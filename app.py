@@ -18,8 +18,40 @@ db.init_app(app)
 # 确保上传目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+@app.route('/')
+@app.route('/index.html')
+def serve_index():
+    return send_from_directory(BASE_DIR, 'index.html')
+
+
+@app.route('/admin.html')
+def serve_admin():
+    return send_from_directory(BASE_DIR, 'admin.html')
+
+
+@app.route('/user.html')
+def serve_user():
+    return send_from_directory(BASE_DIR, 'user.html')
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
+def build_stored_filename(original_filename):
+    """生成保存文件名。中文等非 ASCII 原始名经 secure_filename 会变成空或只剩扩展名片段，这里统一保证 stem.ext 合法。"""
+    if not original_filename or '.' not in original_filename:
+        return None
+    ext = original_filename.rsplit('.', 1)[1].lower()
+    if ext not in app.config['ALLOWED_EXTENSIONS']:
+        return None
+    stem = secure_filename(original_filename.rsplit('.', 1)[0])
+    if not stem:
+        stem = 'image'
+    return datetime.now().strftime('%Y%m%d_%H%M%S_') + f'{stem}.{ext}'
 
 def generate_token(user_id):
     """生成JWT token"""
@@ -120,26 +152,27 @@ def upload_case():
     """上传病例（支持纯文本、纯图片或组合）"""
     
     # 1. 安全地获取文件，不要直接访问 request.files['image']，否则没文件会报错
-    file = request.files.get('image') 
-    description = request.form.get('description', '')
+    file = request.files.get('image')
+    description = (request.form.get('description') or '').strip()
 
     # 2. 校验逻辑：至少要有文字或图片之一
-    if not file and not description:
+    if (not file or file.filename == '') and not description:
         return jsonify({'error': '请上传图片或填写病情描述'}), 400
 
     image_path = None
     filename = None
 
-    # 3. 【关键修改】只有当文件存在且合法时，才进行保存操作
-    if file and file.filename != '' and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
-        filename = timestamp + filename
+    # 3. 有文件则必须格式合法，否则明确报错（避免此前静默不落盘仍返回成功）
+    if file and file.filename != '':
+        if not allowed_file(file.filename):
+            return jsonify({
+                'error': '不支持的图片格式，请使用 PNG、JPG、JPEG、GIF 或 WEBP'
+            }), 400
+        filename = build_stored_filename(file.filename)
+        if not filename:
+            return jsonify({'error': '无效的图片文件名'}), 400
         image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(image_path)
-    
-    # 注意：如果 file 是 None 或者文件名无效，代码会直接跳过上面的块，
-    # 此时 image_path 保持为 None，程序继续向下执行，不会报错。
 
     # 4. 创建病例记录
     case = Case(
@@ -316,5 +349,7 @@ if __name__ == '__main__':
             print(f"默认管理员账户已创建: admin / {default_password}")
             print("⚠️  请记录此密码或使用 create_admin.py 重置管理员密码")
 
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', '5001'))
+    print(f"服务地址: http://127.0.0.1:{port}")
+    app.run(debug=True, host='0.0.0.0', port=port)
 

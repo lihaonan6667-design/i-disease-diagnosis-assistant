@@ -1,0 +1,53 @@
+# 密钥与本地环境（勿提交）
+.env
+.env.*
+!.env.example
+
+# 虚拟环境
+.venv/
+venv/
+env/
+.python-version
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 测试与覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Flask / 本项目运行时数据
+instance/
+uploads/
+*.db
+*.sqlite3
+
+# 日志
+*.log
+logs/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 编辑器（按需注释掉若团队要求提交配置）
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
