@@ -8,10 +8,12 @@ import os
 # 添加当前目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import app
+from app import app, ensure_case_extra_columns
 from models import db, User
 
 with app.app_context():
+    db.create_all()
+    ensure_case_extra_columns()
     # 检查是否存在admin账户
     admin = User.query.filter_by(username='admin').first()
 

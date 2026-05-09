@@ -179,6 +179,7 @@
                                 <th>用户</th>
                                 <th>图片</th>
                                 <th>病情描述</th>
+                                <th>智能预检</th>
                                 <th>诊断结果</th>
                                 <th>提交时间</th>
                                 <th>操作</th>
@@ -186,7 +187,7 @@
                         </thead>
                         <tbody id="casesTable">
                             <tr>
-                                <td colspan="7" class="text-center">加载中...</td>
+                                <td colspan="8" class="text-center">加载中...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -386,7 +387,7 @@
             } catch (error) {
                 console.error('加载病例失败:', error);
                 document.getElementById('casesTable').innerHTML =
-                    '<tr><td colspan="7" class="text-center text-danger">加载失败，请检查后端服务</td></tr>';
+                    '<tr><td colspan="8" class="text-center text-danger">加载失败，请检查后端服务</td></tr>';
             }
         }
 
@@ -394,9 +395,18 @@
             const tbody = document.getElementById('casesTable');
 
             if (cases.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">暂无病例</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">暂无病例</td></tr>';
                 return;
             }
+
+            const escapeHtml = (s) => {
+                if (s == null || s === '') return '';
+                return String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            };
 
             // Markdown渲染函数
             const renderMarkdown = (text) => {
@@ -446,6 +456,18 @@
                     <td>
                         <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${caseItem.description}">
                             ${caseItem.description}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small" style="max-width: 220px;">
+                            ${caseItem.triage_category
+                                ? `<div><span class="text-primary">${escapeHtml(caseItem.triage_category)}</span></div>`
+                                : '<span class="text-muted">—</span>'}
+                            ${caseItem.keywords && caseItem.keywords.length
+                                ? `<div class="mt-1">${caseItem.keywords.map(k =>
+                                    `<span class="badge bg-light text-dark border me-1 mb-1">${escapeHtml(k)}</span>`
+                                  ).join('')}</div>`
+                                : ''}
                         </div>
                     </td>
                     <td>

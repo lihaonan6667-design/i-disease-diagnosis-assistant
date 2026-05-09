@@ -1,3 +1,4 @@
+import json
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -43,10 +44,20 @@ class Case(db.Model):
     image_path = db.Column(db.String(255), nullable=True)
     diagnosis_result = db.Column(db.Text, nullable=True)
     ai_analysis = db.Column(db.Text, nullable=True)
+    triage_category = db.Column(db.String(80), nullable=True)
+    keywords_json = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
+        keywords = []
+        if self.keywords_json:
+            try:
+                keywords = json.loads(self.keywords_json)
+                if not isinstance(keywords, list):
+                    keywords = []
+            except json.JSONDecodeError:
+                keywords = []
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -55,6 +66,8 @@ class Case(db.Model):
             'image_path': self.image_path,
             'diagnosis_result': self.diagnosis_result,
             'ai_analysis': self.ai_analysis,
+            'triage_category': self.triage_category,
+            'keywords': keywords,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

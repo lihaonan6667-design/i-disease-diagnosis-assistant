@@ -383,6 +383,15 @@
             }
         }
 
+        function escapeHtml(s) {
+            if (s == null || s === '') return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         async function loadMyCases() {
             try {
                 const response = await fetch(`${API_BASE}/my-cases`, {
@@ -459,6 +468,12 @@
                                     <strong><i class="bi bi-file-text"></i> 病情描述：</strong>
                                     <p class="mt-1">${caseItem.description}</p>
                                 </div>
+                                ${(caseItem.triage_category || (caseItem.keywords && caseItem.keywords.length)) ? `
+                                <div class="alert alert-light border py-2 mb-3">
+                                    ${caseItem.triage_category ? `<div><i class="bi bi-hospital"></i> <strong>初步专科：</strong>${escapeHtml(caseItem.triage_category)}</div>` : ''}
+                                    ${caseItem.keywords && caseItem.keywords.length ? `<div class="mt-2"><strong>术语关键词：</strong> ${caseItem.keywords.map(k => `<span class="badge bg-secondary me-1">${escapeHtml(k)}</span>`).join('')}</div>` : ''}
+                                </div>
+                                ` : ''}
                                 ${diagnosisHtml ? `
                                     <div class="diagnosis-result">
                                         <h6><i class="bi bi-clipboard-check"></i> 诊断结果：</h6>

@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import json
 import os
 from werkzeug.utils import secure_filename
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 from config import Config
 from models import db, User, Case
 from ai_service import analyze_with_ai
@@ -19,6 +22,27 @@ db.init_app(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def ensure_case_extra_columns():
+    """旧版 SQLite 库缺少 triage_category / keywords_json 时自动 ALTER TABLE"""
+    for sql in (
+        'ALTER TABLE cases ADD COLUMN triage_category VARCHAR(80)',
+        'ALTER TABLE cases ADD COLUMN keywords_json TEXT',
+    ):
+        try:
+            db.session.execute(text(sql))
+            db.session.commit()
+        except OperationalError:
+            db.session.rollback()
+
+
+@app.before_request
+def _ensure_case_schema_once():
+    if app.config.get('_case_extra_cols_checked'):
+        return
+    ensure_case_extra_columns()
+    app.config['_case_extra_cols_checked'] = True
 
 
 @app.route('/')
@@ -187,9 +211,12 @@ def upload_case():
     try:
         # 将路径和描述传给 AI 函数
         ai_result = analyze_with_ai(image_path, description)
-        
+
         case.ai_analysis = ai_result.get('analysis', '')
         case.diagnosis_result = ai_result.get('diagnosis', '')
+        case.triage_category = ai_result.get('triage_category')
+        kw = ai_result.get('keywords') or []
+        case.keywords_json = json.dumps(kw, ensure_ascii=False) if kw else None
         db.session.commit()
 
         return jsonify({
@@ -336,6 +363,7 @@ def update_user(user_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        ensure_case_extra_columns()
         # 创建默认管理员账户（如果不存在）
         # 注意：生产环境请务必修改默认密码或使用 create_admin.py 创建管理员
         admin = User.query.filter_by(username='admin').first()
