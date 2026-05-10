@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -18,6 +21,42 @@ _EMBED_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings"
 _index = None
 _chunks_meta: list[dict[str, Any]] | None = None
 _load_lock = threading.Lock()
+
+
+def _faiss_write_index_unicode_safe(index, dest: Path) -> None:
+    """Windows 下路径含中文时 faiss.write_index 会 fopen 失败，先写到临时目录再移动。"""
+    import faiss
+
+    dest = Path(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(suffix=".faiss")
+    os.close(fd)
+    try:
+        faiss.write_index(index, tmp)
+        shutil.move(tmp, str(dest))
+    except BaseException:
+        if os.path.isfile(tmp):
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+        raise
+
+
+def _faiss_read_index_unicode_safe(src: Path):
+    """同上，读取时经 ASCII 临时路径再交给 faiss。"""
+    import faiss
+
+    fd, tmp = tempfile.mkstemp(suffix=".faiss")
+    os.close(fd)
+    try:
+        shutil.copy2(Path(src), tmp)
+        return faiss.read_index(tmp)
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
 
 
 def _corpus_dir() -> Path:
@@ -157,7 +196,7 @@ def save_faiss_index(chunks: list[dict[str, Any]], embeddings: list[list[float]]
     dim = xb.shape[1]
     index = faiss.IndexFlatIP(dim)
     index.add(xb)
-    faiss.write_index(index, str(out / "index.faiss"))
+    _faiss_write_index_unicode_safe(index, out / "index.faiss")
     meta = {
         "embedding_model": Config.EMBEDDING_MODEL,
         "chunks": [
@@ -191,7 +230,7 @@ def _lazy_load_index():
             _chunks_meta = []
             return
         try:
-            _index = faiss.read_index(str(idx_path))
+            _index = _faiss_read_index_unicode_safe(idx_path)
             data = json.loads(meta_path.read_text(encoding="utf-8"))
             _chunks_meta = data.get("chunks") or []
             if _index.ntotal != len(_chunks_meta):
