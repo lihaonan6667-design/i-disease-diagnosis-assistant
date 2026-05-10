@@ -36,7 +36,6 @@ htmlcov/
 # Flask / 本项目运行时数据
 instance/
 uploads/
-rag_data/
 *.db
 *.sqlite3
 
