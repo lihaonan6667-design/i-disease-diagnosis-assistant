@@ -29,6 +29,7 @@ def ensure_case_extra_columns():
     for sql in (
         'ALTER TABLE cases ADD COLUMN triage_category VARCHAR(80)',
         'ALTER TABLE cases ADD COLUMN keywords_json TEXT',
+        'ALTER TABLE cases ADD COLUMN rag_sources_json TEXT',
     ):
         try:
             db.session.execute(text(sql))
@@ -217,6 +218,8 @@ def upload_case():
         case.triage_category = ai_result.get('triage_category')
         kw = ai_result.get('keywords') or []
         case.keywords_json = json.dumps(kw, ensure_ascii=False) if kw else None
+        rs = ai_result.get('rag_sources') or []
+        case.rag_sources_json = json.dumps(rs, ensure_ascii=False) if rs else None
         db.session.commit()
 
         return jsonify({

@@ -46,6 +46,7 @@ class Case(db.Model):
     ai_analysis = db.Column(db.Text, nullable=True)
     triage_category = db.Column(db.String(80), nullable=True)
     keywords_json = db.Column(db.Text, nullable=True)
+    rag_sources_json = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -58,6 +59,14 @@ class Case(db.Model):
                     keywords = []
             except json.JSONDecodeError:
                 keywords = []
+        rag_sources = []
+        if self.rag_sources_json:
+            try:
+                rag_sources = json.loads(self.rag_sources_json)
+                if not isinstance(rag_sources, list):
+                    rag_sources = []
+            except json.JSONDecodeError:
+                rag_sources = []
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -68,6 +77,7 @@ class Case(db.Model):
             'ai_analysis': self.ai_analysis,
             'triage_category': self.triage_category,
             'keywords': keywords,
+            'rag_sources': rag_sources,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

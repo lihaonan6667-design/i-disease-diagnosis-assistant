@@ -468,6 +468,11 @@
                                     `<span class="badge bg-light text-dark border me-1 mb-1">${escapeHtml(k)}</span>`
                                   ).join('')}</div>`
                                 : ''}
+                            ${caseItem.rag_sources && caseItem.rag_sources.length
+                                ? `<div class="mt-2 pt-1 border-top small text-muted" title="RAG 检索片段">${caseItem.rag_sources.map((s, i) =>
+                                    `<div class="mb-1"><strong>${i + 1}.</strong> ${escapeHtml((s.title || '').slice(0, 48))}${(s.title || '').length > 48 ? '…' : ''}</div>`
+                                  ).join('')}</div>`
+                                : ''}
                         </div>
                     </td>
                     <td>

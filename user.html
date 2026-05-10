@@ -474,6 +474,18 @@
                                     ${caseItem.keywords && caseItem.keywords.length ? `<div class="mt-2"><strong>术语关键词：</strong> ${caseItem.keywords.map(k => `<span class="badge bg-secondary me-1">${escapeHtml(k)}</span>`).join('')}</div>` : ''}
                                 </div>
                                 ` : ''}
+                                ${caseItem.rag_sources && caseItem.rag_sources.length ? `
+                                <div class="alert alert-info border py-2 mb-3">
+                                    <div class="fw-semibold mb-2"><i class="bi bi-journal-text"></i> 知识库参考片段</div>
+                                    ${caseItem.rag_sources.map((s, i) => `
+                                        <div class="small border-start border-primary ps-2 mb-2">
+                                            <div><strong>${i + 1}.</strong> ${escapeHtml(s.title || '资料')}</div>
+                                            ${s.ref ? `<div class="text-muted">${escapeHtml(s.ref)}</div>` : ''}
+                                            <div class="mt-1 text-secondary">${escapeHtml(s.excerpt || '')}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                ` : ''}
                                 ${diagnosisHtml ? `
                                     <div class="diagnosis-result">
                                         <h6><i class="bi bi-clipboard-check"></i> 诊断结果：</h6>

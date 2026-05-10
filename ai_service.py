@@ -4,6 +4,7 @@ import json
 import os
 import re
 from config import Config
+from rag_service import rag_prefix_for_prompt, retrieve_for_query
 
 # 预设医学专科体系（阶段一零样本分类可选类别）
 MEDICAL_CATEGORIES = ["心血管疾病", "呼吸系统疾病", "消化系统疾病", "其他"]
@@ -162,7 +163,7 @@ def _format_triage_hint(triage_category, keywords):
     return "\n\n" + "\n".join(lines) + "\n"
 
 
-def analyze_text_only(description, triage_category='', keywords=None):
+def analyze_text_only(description, triage_category='', keywords=None, rag_context=''):
     """纯文本最终分析（可将阶段一、二结果写入上下文）"""
     keywords = keywords or []
     api_url = Config.AI_API_URL.lower()
@@ -178,7 +179,8 @@ def analyze_text_only(description, triage_category='', keywords=None):
         model = Config.AI_MODEL or "gpt-3.5-turbo"
 
     hint = _format_triage_hint(triage_category, keywords)
-    user_body = (
+    prefix = rag_prefix_for_prompt(rag_context)
+    user_body = prefix + (
         f"患者描述：{description}{hint}\n"
         "请结合上述信息（若有专科与术语提示请优先保持一致），提供："
         "1. 可能的原因分析 2. 建议就诊科室 3. 注意事项。\n"
@@ -234,10 +236,24 @@ def analyze_with_ai(image_path, description):
     """
     triage_category, keywords = "", []
     desc_stripped = (description or '').strip()
+    rag_context, rag_sources = "", []
 
     try:
         if desc_stripped:
             triage_category, keywords = run_triage_pipeline(desc_stripped)
+
+        query_parts = []
+        if desc_stripped:
+            query_parts.append(desc_stripped)
+        if triage_category:
+            query_parts.append(triage_category)
+        if keywords:
+            query_parts.extend(keywords)
+        if query_parts:
+            try:
+                rag_context, rag_sources = retrieve_for_query(" ".join(query_parts))
+            except Exception as rag_ex:
+                print(f"RAG 检索异常: {rag_ex}")
 
         has_valid_image = image_path and os.path.exists(image_path)
 
@@ -247,23 +263,36 @@ def analyze_with_ai(image_path, description):
             base64_image = encode_image(image_path)
             if not base64_image:
                 print("警告：图片读取失败，降级为纯文本分析")
-                out = analyze_text_only(description or '', triage_category, keywords)
+                out = analyze_text_only(
+                    description or '', triage_category, keywords, rag_context
+                )
             else:
                 api_url = Config.AI_API_URL.lower()
                 if 'dashscope' in api_url or 'qwen' in api_url or 'aliyun' in api_url:
                     out = analyze_with_qwen(
-                        description or '', base64_image, triage_category, keywords
+                        description or '',
+                        base64_image,
+                        triage_category,
+                        keywords,
+                        rag_context,
                     )
                 else:
                     out = analyze_with_openai_format(
-                        description or '', base64_image, triage_category, keywords
+                        description or '',
+                        base64_image,
+                        triage_category,
+                        keywords,
+                        rag_context,
                     )
         else:
             print(f"【纯文本模式】无图片，仅分析描述: {description!r}")
-            out = analyze_text_only(description or '', triage_category, keywords)
+            out = analyze_text_only(
+                description or '', triage_category, keywords, rag_context
+            )
 
         out['triage_category'] = triage_category if triage_category else None
         out['keywords'] = keywords or []
+        out['rag_sources'] = rag_sources
         return out
 
     except Exception as e:
@@ -274,10 +303,13 @@ def analyze_with_ai(image_path, description):
             'diagnosis': '请稍后重试或联系管理员',
             'triage_category': triage_category if triage_category else None,
             'keywords': keywords or [],
+            'rag_sources': rag_sources,
         }
 
 
-def analyze_with_openai_format(description, base64_image, triage_category='', keywords=None):
+def analyze_with_openai_format(
+    description, base64_image, triage_category='', keywords=None, rag_context=''
+):
     keywords = keywords or []
     headers = {
         "Content-Type": "application/json",
@@ -285,7 +317,8 @@ def analyze_with_openai_format(description, base64_image, triage_category='', ke
     }
 
     hint = _format_triage_hint(triage_category, keywords)
-    text_part = (
+    prefix = rag_prefix_for_prompt(rag_context)
+    text_part = prefix + (
         f"请作为专业医生分析以下病情。\n\n**患者描述：** {description or '（用户未填写文字，请结合图像综合判断）'}"
         f"{hint}\n**请根据图片与上述信息，提供简洁的医学分析与就诊建议。**"
     )
@@ -328,7 +361,9 @@ def analyze_with_openai_format(description, base64_image, triage_category='', ke
         }
 
 
-def analyze_with_qwen(description, base64_image, triage_category='', keywords=None):
+def analyze_with_qwen(
+    description, base64_image, triage_category='', keywords=None, rag_context=''
+):
     keywords = keywords or []
     if Config.AI_API_URL and 'dashscope' in Config.AI_API_URL.lower():
         api_url = Config.AI_API_URL
@@ -341,7 +376,8 @@ def analyze_with_qwen(description, base64_image, triage_category='', keywords=No
     }
 
     hint = _format_triage_hint(triage_category, keywords)
-    text_part = (
+    prefix = rag_prefix_for_prompt(rag_context)
+    text_part = prefix + (
         f"请作为专业医生分析以下病情。\n\n**患者描述：** {description or '（用户未填写文字，请结合图像综合判断）'}"
         f"{hint}\n**请根据图片与上述信息，提供简洁的医学分析与就诊建议。**"
     )

@@ -12,6 +12,13 @@ AI_API_KEY=4ac2d553-ab9b-4423-a620-24886ff0ead5
 AI_API_URL=https://api.volcengine.com/api/v1/chat/completions
 AI_MODEL=qwen-vl-plus
 
+# 本地 RAG（可选）：向量化 corpus/ 需 DashScope 兼容 embeddings，构建索引：
+#   pip install -r requirements.txt
+#   python build_rag_index.py
+# EMBEDDING_MODEL=text-embedding-v2
+# RAG_TOP_K=4
+# RAG_DATA_DIR=rag_data
+
 # 如果使用其他云服务，示例：
 # OpenAI:
 #   AI_API_URL=https://api.openai.com/v1/chat/completions

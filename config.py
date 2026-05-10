@@ -29,3 +29,11 @@ class Config:
     # qwen-max: 纯文本模型，不支持图片
     AI_MODEL = (os.environ.get('AI_MODEL') or '').strip() or 'qwen3.5-omni-flash'
 
+    # 本地 RAG（corpus + FAISS；先运行 python build_rag_index.py）
+    CORPUS_DIR = str(_BASE_DIR / (os.environ.get('CORPUS_DIR') or 'corpus').strip())
+    RAG_DATA_DIR = str(_BASE_DIR / (os.environ.get('RAG_DATA_DIR') or 'rag_data').strip())
+    EMBEDDING_MODEL = (os.environ.get('EMBEDDING_MODEL') or '').strip() or 'text-embedding-v2'
+    RAG_TOP_K = int(os.environ.get('RAG_TOP_K') or '4')
+    RAG_CHUNK_SIZE = int(os.environ.get('RAG_CHUNK_SIZE') or '480')
+    RAG_CHUNK_OVERLAP = int(os.environ.get('RAG_CHUNK_OVERLAP') or '72')
+
