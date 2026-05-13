@@ -1,66 +1,78 @@
 {
-  "version": 1,
-  "note": "毕设评估用金标准题集。expected_terms 为人工根据《内科学》式语料列出的「宜在回答或检索片段中出现的词/短语」，用于可复现的自动近似指标；非临床诊断金标准。",
+  "version": 2,
+  "note": "毕设评估金标。expected_terms 用于回答/检索中的术语召回；completeness_checklist 为人工列出的「完整回答宜覆盖的要点短语」（用于可验证的完整度，与规则正则互补）。",
   "cases": [
     {
       "id": "cv_chf",
       "description": "活动后胸闷气短，平卧时加重，坐起来能缓解，双下肢水肿。",
-      "expected_terms": ["心力衰竭", "呼吸困难", "端坐呼吸", "水肿"]
+      "expected_terms": ["心力衰竭", "呼吸困难", "端坐呼吸", "水肿"],
+      "completeness_checklist": ["超声心动图", "利尿", "容量负荷", "随访"]
     },
     {
       "id": "cv_chest",
       "description": "胸骨后压榨样疼痛，向左肩放射，伴出汗。",
-      "expected_terms": ["心绞痛", "心肌", "胸痛"]
+      "expected_terms": ["心绞痛", "心肌", "胸痛"],
+      "completeness_checklist": ["肌钙蛋白", "心电图", "冠状动脉", "急性冠脉"]
     },
     {
       "id": "resp_cough",
       "description": "反复咳嗽咳痰，活动后气促，有吸烟史。",
-      "expected_terms": ["慢性阻塞性", "咳嗽", "气促"]
+      "expected_terms": ["慢性阻塞性", "咳嗽", "气促"],
+      "completeness_checklist": ["肺功能", "支气管舒张", "戒烟", "急性加重"]
     },
     {
       "id": "resp_asthma",
       "description": "发作性喘息，夜间憋醒，闻冷空气加重。",
-      "expected_terms": ["哮喘", "喘息", "支气管"]
+      "expected_terms": ["哮喘", "喘息", "支气管"],
+      "completeness_checklist": ["吸入", "峰流速", "过敏原", "急性发作"]
     },
     {
       "id": "gi_ulcer",
       "description": "上腹部隐痛，空腹时明显，进食后缓解，反酸。",
-      "expected_terms": ["消化性溃疡", "胃酸", "腹痛"]
+      "expected_terms": ["消化性溃疡", "胃酸", "腹痛"],
+      "completeness_checklist": ["质子泵", "幽门螺杆菌", "胃镜", "出血风险"]
     },
     {
       "id": "gi_liver",
       "description": "乏力食欲差，皮肤发黄，尿色加深。",
-      "expected_terms": ["黄疸", "肝", "胆红素"]
+      "expected_terms": ["黄疸", "肝", "胆红素"],
+      "completeness_checklist": ["肝功能", "病毒性肝炎", "影像学", "凝血功能"]
     },
     {
       "id": "cv_htn",
       "description": "头晕头痛，测血压偏高，家族有高血压。",
-      "expected_terms": ["高血压", "血压", "心血管"]
+      "expected_terms": ["高血压", "血压", "心血管"],
+      "completeness_checklist": ["靶器官", "生活方式", "降压目标", "家庭监测"]
     },
     {
       "id": "resp_infection",
       "description": "发热咳嗽，咳黄痰，右侧胸痛，深呼吸加重。",
-      "expected_terms": ["肺炎", "感染", "咳嗽"]
+      "expected_terms": ["肺炎", "感染", "咳嗽"],
+      "completeness_checklist": ["抗生素", "胸部影像", "氧疗", "疗程"]
     },
     {
       "id": "cv_palp",
       "description": "心慌心悸，脉搏不齐，有时突然发作。",
-      "expected_terms": ["心律失常", "心房", "心悸"]
+      "expected_terms": ["心律失常", "心房", "心悸"],
+      "completeness_checklist": ["心电图", "甲状腺功能", "电解质", "Holter"]
     },
     {
       "id": "gi_reflux",
       "description": "烧心反酸，饭后胸骨后烧灼感，弯腰加重。",
-      "expected_terms": ["胃食管反流", "反酸", "食管"]
+      "expected_terms": ["胃食管反流", "反酸", "食管"],
+      "completeness_checklist": ["质子泵抑制剂", "生活方式", "内镜", "巴雷特"]
     },
     {
       "id": "resp_pe",
       "description": "突发呼吸困难，一侧胸痛，近期长途旅行久坐。",
-      "expected_terms": ["肺栓塞", "血栓", "呼吸困难"]
+      "expected_terms": ["肺栓塞", "血栓", "呼吸困难"],
+      "completeness_checklist": ["D-二聚体", "CTPA", "抗凝", "下肢静脉"]
     },
     {
       "id": "cv_syncope",
       "description": "用力后突然晕倒，数秒清醒，既往心脏杂音。",
-      "expected_terms": ["晕厥", "心脏", "瓣膜"]
+      "expected_terms": ["晕厥", "心脏", "瓣膜"],
+      "completeness_checklist": ["超声心动图", "心律失常", "体位试验", "神经系统"]
     }
   ]
 }

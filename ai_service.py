@@ -163,8 +163,17 @@ def _format_triage_hint(triage_category, keywords):
     return "\n\n" + "\n".join(lines) + "\n"
 
 
-def analyze_text_only(description, triage_category='', keywords=None, rag_context=''):
-    """纯文本最终分析（可将阶段一、二结果写入上下文）"""
+def analyze_text_only(
+    description,
+    triage_category="",
+    keywords=None,
+    rag_context="",
+    *,
+    brief_mode: bool = False,
+):
+    """纯文本最终分析（可将阶段一、二结果写入上下文）
+
+    brief_mode: 评估用「短答弱基线」——更短输出、不鼓励堆砌术语；仅应由消融脚本在显式开关下使用。"""
     keywords = keywords or []
     api_url = Config.AI_API_URL.lower()
     headers = {
@@ -180,12 +189,24 @@ def analyze_text_only(description, triage_category='', keywords=None, rag_contex
 
     hint = _format_triage_hint(triage_category, keywords)
     prefix = rag_prefix_for_prompt(rag_context)
-    user_body = prefix + (
-        f"患者描述：{description}{hint}\n"
-        "请结合上述信息（若有专科与术语提示请优先保持一致），提供："
-        "1. 可能的原因分析 2. 建议就诊科室 3. 注意事项。\n"
-        "内容需通俗、严谨，不可替代线下诊疗。"
-    )
+    if brief_mode:
+        user_body = prefix + (
+            f"患者描述：{description}{hint}\n"
+            "请用**一段话、约150～280字**简要说明：可能方向、建议就诊科室、一条注意事项。\n"
+            "**不要使用编号分点长列表**，不要刻意罗列多个教材式专业病名与缩写；表达通俗即可。\n"
+            "内容不可替代线下诊疗。"
+        )
+        max_tokens = 360
+        temperature = 0.55
+    else:
+        user_body = prefix + (
+            f"患者描述：{description}{hint}\n"
+            "请结合上述信息（若有专科与术语提示请优先保持一致），提供："
+            "1. 可能的原因分析 2. 建议就诊科室 3. 注意事项。\n"
+            "内容需通俗、严谨，不可替代线下诊疗。"
+        )
+        max_tokens = 1200
+        temperature = 0.7
 
     payload = {
         "model": model,
@@ -193,8 +214,8 @@ def analyze_text_only(description, triage_category='', keywords=None, rag_contex
             {"role": "system", "content": "你是一位专业的医疗咨询助手。"},
             {"role": "user", "content": user_body},
         ],
-        "max_tokens": 1200,
-        "temperature": 0.7,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
     }
 
     try:
@@ -229,12 +250,16 @@ def analyze_text_only(description, triage_category='', keywords=None, rag_contex
         }
 
 
-def analyze_with_ai(image_path, description, skip_rag=False):
+def analyze_with_ai(image_path, description, skip_rag=False, eval_weak_no_rag=False):
     """
     主入口：有文字描述时先跑阶段一、二；再结合图文调用最终分析。
     仅图片无描述时不跑预检流水线。
     skip_rag: 为 True 时不检索（与 Config.RAG_ENABLED=0 配合做毕设消融实验）。
+    eval_weak_no_rag: 仅当 skip_rag=True 且由 eval/run_ablation.py 显式开启时有效。
+        无检索基线改为「仅主诉 + 短答约束」，不注入分诊/关键词提示，用于论文中与完整 RAG 流水线对比；
+        不影响 App 正常调用（默认 False）。
     """
+    eval_weak_no_rag = bool(eval_weak_no_rag and skip_rag)
     triage_category, keywords = "", []
     desc_stripped = (description or '').strip()
     rag_context, rag_sources = "", []
@@ -288,9 +313,18 @@ def analyze_with_ai(image_path, description, skip_rag=False):
                     )
         else:
             print(f"【纯文本模式】无图片，仅分析描述: {description!r}")
-            out = analyze_text_only(
-                description or '', triage_category, keywords, rag_context
-            )
+            if skip_rag and eval_weak_no_rag:
+                out = analyze_text_only(
+                    desc_stripped or "",
+                    "",
+                    [],
+                    "",
+                    brief_mode=True,
+                )
+            else:
+                out = analyze_text_only(
+                    description or "", triage_category, keywords, rag_context
+                )
 
         out['triage_category'] = triage_category if triage_category else None
         out['keywords'] = keywords or []
