@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "note": "毕设评估用金标准题集。expected_terms 为人工根据《内科学》式语料列出的「宜在回答或检索片段中出现的词/短语」，用于可复现的自动近似指标；非临床诊断金标准。",
+  "cases": [
+    {
+      "id": "cv_chf",
+      "description": "活动后胸闷气短，平卧时加重，坐起来能缓解，双下肢水肿。",
+      "expected_terms": ["心力衰竭", "呼吸困难", "端坐呼吸", "水肿"]
+    },
+    {
+      "id": "cv_chest",
+      "description": "胸骨后压榨样疼痛，向左肩放射，伴出汗。",
+      "expected_terms": ["心绞痛", "心肌", "胸痛"]
+    },
+    {
+      "id": "resp_cough",
+      "description": "反复咳嗽咳痰，活动后气促，有吸烟史。",
+      "expected_terms": ["慢性阻塞性", "咳嗽", "气促"]
+    },
+    {
+      "id": "resp_asthma",
+      "description": "发作性喘息，夜间憋醒，闻冷空气加重。",
+      "expected_terms": ["哮喘", "喘息", "支气管"]
+    },
+    {
+      "id": "gi_ulcer",
+      "description": "上腹部隐痛，空腹时明显，进食后缓解，反酸。",
+      "expected_terms": ["消化性溃疡", "胃酸", "腹痛"]
+    },
+    {
+      "id": "gi_liver",
+      "description": "乏力食欲差，皮肤发黄，尿色加深。",
+      "expected_terms": ["黄疸", "肝", "胆红素"]
+    },
+    {
+      "id": "cv_htn",
+      "description": "头晕头痛，测血压偏高，家族有高血压。",
+      "expected_terms": ["高血压", "血压", "心血管"]
+    },
+    {
+      "id": "resp_infection",
+      "description": "发热咳嗽，咳黄痰，右侧胸痛，深呼吸加重。",
+      "expected_terms": ["肺炎", "感染", "咳嗽"]
+    },
+    {
+      "id": "cv_palp",
+      "description": "心慌心悸，脉搏不齐，有时突然发作。",
+      "expected_terms": ["心律失常", "心房", "心悸"]
+    },
+    {
+      "id": "gi_reflux",
+      "description": "烧心反酸，饭后胸骨后烧灼感，弯腰加重。",
+      "expected_terms": ["胃食管反流", "反酸", "食管"]
+    },
+    {
+      "id": "resp_pe",
+      "description": "突发呼吸困难，一侧胸痛，近期长途旅行久坐。",
+      "expected_terms": ["肺栓塞", "血栓", "呼吸困难"]
+    },
+    {
+      "id": "cv_syncope",
+      "description": "用力后突然晕倒，数秒清醒，既往心脏杂音。",
+      "expected_terms": ["晕厥", "心脏", "瓣膜"]
+    }
+  ]
+}

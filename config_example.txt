@@ -18,6 +18,8 @@ AI_MODEL=qwen-vl-plus
 # EMBEDDING_MODEL=text-embedding-v2
 # RAG_TOP_K=4
 # RAG_DATA_DIR=rag_data
+# RAG_ENABLED=1
+# 毕设消融：整站关闭检索可设 RAG_ENABLED=0；细粒度对照见 eval/run_ablation.py
 
 # 如果使用其他云服务，示例：
 # OpenAI:

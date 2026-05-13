@@ -36,4 +36,7 @@ class Config:
     RAG_TOP_K = int(os.environ.get('RAG_TOP_K') or '4')
     RAG_CHUNK_SIZE = int(os.environ.get('RAG_CHUNK_SIZE') or '480')
     RAG_CHUNK_OVERLAP = int(os.environ.get('RAG_CHUNK_OVERLAP') or '72')
+    # 是否启用检索增强（.env 中 RAG_ENABLED=0 可全局关闭，便于毕设对照实验）
+    _rag_env = (os.environ.get('RAG_ENABLED') or '1').strip().lower()
+    RAG_ENABLED = _rag_env not in ('0', 'false', 'no', 'off')
 

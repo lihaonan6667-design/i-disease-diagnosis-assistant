@@ -229,10 +229,11 @@ def analyze_text_only(description, triage_category='', keywords=None, rag_contex
         }
 
 
-def analyze_with_ai(image_path, description):
+def analyze_with_ai(image_path, description, skip_rag=False):
     """
     主入口：有文字描述时先跑阶段一、二；再结合图文调用最终分析。
     仅图片无描述时不跑预检流水线。
+    skip_rag: 为 True 时不检索（与 Config.RAG_ENABLED=0 配合做毕设消融实验）。
     """
     triage_category, keywords = "", []
     desc_stripped = (description or '').strip()
@@ -249,7 +250,8 @@ def analyze_with_ai(image_path, description):
             query_parts.append(triage_category)
         if keywords:
             query_parts.extend(keywords)
-        if query_parts:
+        use_rag = Config.RAG_ENABLED and not skip_rag and bool(query_parts)
+        if use_rag:
             try:
                 rag_context, rag_sources = retrieve_for_query(" ".join(query_parts))
             except Exception as rag_ex:
